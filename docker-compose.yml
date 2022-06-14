@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:14.1-alpine
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=travel
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  cache:
+    image: redis:7.0-alpine
+    restart: always
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+    command: redis-server
+    volumes:
+      - cache:/data
+  
+  web:
+    build: .
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    
+    command: >
+      sh -c "python manage.py migrate
+      && python manage.py runserver 0.0.0.0:8000"
+      
+    environment:
+      - POSTGRES_NAME=travel
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=cache
+      - REDIS_PORT=6379
+      
+
+    depends_on:
+      - db
+      - cache
+
+volumes:
+    cache:
+      driver: local
+
+  
