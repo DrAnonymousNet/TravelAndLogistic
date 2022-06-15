@@ -1,5 +1,6 @@
 
-from django.shortcuts import redirect
+import re
+from django.shortcuts import redirect, render
 from requests import request
 from uritemplate import partial
 from .serializers import *
@@ -19,6 +20,9 @@ from .permissions import IsOwnerOnly, IsOwnerOrReadOnly
 from rest_framework.decorators import permission_classes
 # Create your views here.
 
+
+def index(request):
+    return render(request, "index.html")
 
 class TransportCompanyCreateApiView(generics.ListCreateAPIView):
     serializer_class = TransportCompanySerializer
