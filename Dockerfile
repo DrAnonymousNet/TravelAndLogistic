@@ -2,12 +2,6 @@ FROM python:3.11-rc-alpine
 WORKDIR /app
 COPY requirements.txt ./requirements.txt
 
-RUN python -m pip install --upgrade pip
-RUN pip install -r ./requirements.txt
-
-
-COPY . /app/
-
 
 RUN python -m venv /py && \
    /py/bin/pip install --upgrade pip && \
@@ -26,3 +20,4 @@ RUN python -m venv /py && \
       --no-create-home \
       django-user
 
+COPY . /app/
