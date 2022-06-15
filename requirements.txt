@@ -1,6 +1,7 @@
 django == 4.0.5
 psycopg2-binary==2.9.3
 environ
+gunicorn==20.1.0
 redis==4.3.3
 requests==2.22.0
 djangorestframework==3.13.1
