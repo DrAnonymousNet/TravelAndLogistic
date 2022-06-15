@@ -20,10 +20,7 @@ jobs:
       
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
-      env:
-        SECRET_KEY: ${{secrets.SECRET_KEY}}
-        FLUTTER_KEY: ${{ secrets.FLUTTER_KEY }}
-        TERMI_KEY: ${{secrets.TERMI_KEY}}
+      
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Dependencies
@@ -32,5 +29,9 @@ jobs:
         pip install -r requirements.txt
      
     - name: Run Tests
+      env:
+        SECRET_KEY: ${{secrets.SECRET_KEY}}
+        FLUTTER_KEY: ${{ secrets.FLUTTER_KEY }}
+        TERMI_KEY: ${{secrets.TERMI_KEY}}
       run: |
         python manage.py test Travel.tests.location
