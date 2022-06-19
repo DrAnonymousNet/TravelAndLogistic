@@ -53,6 +53,7 @@ def logout(request):
 class OTPVerifcation:
     send : bool = True
     phone_number : str =""
+    otp: str = ""
     response : requests.Response = None
     def __post_init__(self):
         self.phone_number = self.processnumber()
@@ -100,9 +101,9 @@ class OTPVerifcation:
         }
         if not self.send:
             payload = {
-             "api_key": "",
+             "api_key": env("TERMI_KEY"),
                 "pin_id": "NUMERIC",
-                "pin": self.phone_number,
+                "pin": self.otp,
                           }
         return payload
 

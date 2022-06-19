@@ -45,14 +45,16 @@ class LogoutView(APIView):
 class OTPAPIView(APIView):
 
     def post(self, *args, **kwargs):
-        try:
-            user = User.objects.get(phone_number=phone_number)
-        except:
-            return Response({"error":"No user with this phone number"}, status=status.HTTP_404_NOT_FOUND)
+        """Verify The Inputed OTP"""
+       
         otp = self.request.data
         serializer = OTPSerializer(data=otp)
         serializer.is_valid(raise_exception=True)
         phone_number = self.kwargs.get("phone_number")
+        try:
+            user = User.objects.get(phone_number=phone_number)
+        except:
+            return Response({"error":"No user with this phone number"}, status=status.HTTP_404_NOT_FOUND)
         otp_response = OTPVerifcation(phone_number=phone_number, send=False)
         if otp_response.response.json()["verified"] == "True":
             user.phone_number_verify = True
@@ -61,7 +63,7 @@ class OTPAPIView(APIView):
         return Response(data=otp_response.json(), status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, *args, **kwargs):
-        print(kwargs)
+        """Send OTP to User"""
         number = kwargs.get("phone_number")
         otp_response = OTPVerifcation(phone_number=number, send=True)
         return Response(otp_response.response.json())

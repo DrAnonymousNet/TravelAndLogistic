@@ -1,8 +1,7 @@
-
-import re
+from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
+from djoser import permissions
 from requests import request
-from uritemplate import partial
 from .serializers import *
 from rest_framework.views import APIView 
 from rest_framework import generics
@@ -18,13 +17,32 @@ from .payment_handler import TicketPayment,verify_transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsOwnerOnly, IsOwnerOrReadOnly
 from rest_framework.decorators import permission_classes
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 # Create your views here.
+
+params=[openapi.Parameter(name="company_id",
+                            required=True,
+                            type="integer",
+                            in_="path",
+                            description="A unique ID identifying the Company")                           
+]
+
+
+params2=[openapi.Parameter(name="id",
+                            required=True,
+                            type="integer",
+                            in_="path",
+                            description="A unique ID identifying the Company")                           
+]
+
 
 
 def index(request):
     return render(request, "index.html")
 
 class TransportCompanyCreateApiView(generics.ListCreateAPIView):
+ 
     serializer_class = TransportCompanySerializer
     queryset = TransportCompany.objects.all()
     authentication_classes = [JWTAuthentication, BasicAuthentication]
@@ -82,15 +100,14 @@ class LocationApiView(
 
 
 
-
 class ReviewApiView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    
     serializer_class = ReviewSerializer
 
+    @swagger_auto_schema(request_body=ReviewSerializer, operation_description="Create a new Review for the company with id of ID")
     def post(self,request,*args, **kwargs):
+        """Creates a new Review per Company"""
         print(request.user)
         company_id = kwargs.get("pk")
         try:
@@ -104,6 +121,7 @@ class ReviewApiView(APIView):
         return Response(serializer.data)
     
     def get(self, request, *args, **kwargs):
+        """Get the list of the reviews for a Travel Company"""
         queryset = Review.objects.all()
         serializer = ReviewSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -113,6 +131,8 @@ class ReviewIndividualApiView(APIView):
     permission_classes = [IsOwnerOrReadOnly]
     serializer_class = ReviewSerializer
     
+
+    @swagger_auto_schema(manual_parameters=params, responses={200:ReviewSerializer(many=True)})
     def get(self, request, *args, **kwargs):
         review_id = kwargs.get("id")
         try:
@@ -122,7 +142,9 @@ class ReviewIndividualApiView(APIView):
 
         serializer = ReviewSerializer(instance=review)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
+    @swagger_auto_schema(manual_parameters=params,    
+        request_body=ReviewSerializer, responses={200:ReviewSerializer(many=True)})
     def put(self, request, *args, **kwargs):
         review_id = kwargs.get("id")
         try:
@@ -136,6 +158,8 @@ class ReviewIndividualApiView(APIView):
 
         return Response(serializer.data)
 
+    @swagger_auto_schema(manual_parameters=params,
+        request_body=ReviewSerializer)
     def delete(self, request, **kwargs):
         review_id = kwargs.get("id")
         try:
@@ -146,6 +170,9 @@ class ReviewIndividualApiView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @swagger_auto_schema(
+        manual_parameters=params,        
+        request_body=ReviewSerializer,responses={200:ReviewSerializer(many=True)})
     def patch(self, request, **kwargs):
         review_id = kwargs.get("id")
         try:
@@ -164,14 +191,27 @@ class ReviewIndividualApiView(APIView):
 "/transports/ -- all"
 "/transports/id -- crud"
         
-
 class TransportPriceListCreateApiView(generics.ListCreateAPIView):
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    authentication_classes = [JWTAuthentication]
     serializer_class = TransportPriceCreateSerializer
     lookup_field = "pk"
     queryset = TransportPrice.objects.all()
+    
 
+    
+    @swagger_auto_schema(responses={200:TransportPriceCreateSerializer},manual_parameters=params2)
+    def get(self, request, *args, **kwargs):
+        "Get the list of transport price for the company with the given ID"
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(request_body=TransportPriceCreateSerializer, responses={200:TransportPriceCreateSerializer}, manual_parameters=params2)
+    def post(self, request, *args, **kwargs):
+        "Creates a new transport price for the company with the given ID"
+
+        return super().post(request, *args, **kwargs)
+
+    
     def get_queryset(self, **kwargs):
         company_id = self.kwargs.get(self.lookup_field)
         queryset = TransportPrice.objects.filter(company_id  = company_id)        
@@ -185,12 +225,12 @@ class TransportPriceListCreateApiView(generics.ListCreateAPIView):
         context["company"] = company
         return context
 
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)
-
     
 
-
+@method_decorator(name="get", decorator=swagger_auto_schema(manual_parameters=params, responses={200:TransportPriceReadSerializer(many=True)}))
+@method_decorator(name="put", decorator=swagger_auto_schema(manual_parameters=params, request_body=TransportPriceReadSerializer))
+@method_decorator(name="patch", decorator=swagger_auto_schema(manual_parameters=params, request_body=TransportPriceReadSerializer))
+@method_decorator(name="delete", decorator=swagger_auto_schema(manual_parameters=params))
 class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     authentication_classes = [JWTAuthentication]
@@ -215,8 +255,10 @@ class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
         
         return query_set
 
-    def get_serializer_context(self):
+    def get_serializer_context(self, **kwargs):
         company_id = self.kwargs.get(self.lookup_field)
+        print(self.kwargs, self.lookup_url_kwarg)
+        print(company_id, "FIFJIFOQFOF\n\n\n")
         context =  super().get_serializer_context()
         company = TransportCompany.objects.get(id = company_id)
         context["company"] = company
