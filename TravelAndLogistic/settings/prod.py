@@ -16,13 +16,21 @@ DATABASES = {
 
 CACHES = {
     'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
+
+'''
+CACHES = {
+    'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': 'redis://127.0.0.1:6379',
         'TIMEOUT': 30,
         'KEY_PREFIX': "prod"
     }
 }
-
+'''
 DEBUG = config('DEBUG', False, cast=bool)
 ALLOWED_HOSTS = ["gowithease.herokuapp.com"]
 
