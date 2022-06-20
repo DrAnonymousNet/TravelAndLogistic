@@ -21,4 +21,4 @@ CACHES = {
 }
 
 DEBUG = config('DEBUG', False, cast=bool)
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["gowithease.herokuapp.com"]
