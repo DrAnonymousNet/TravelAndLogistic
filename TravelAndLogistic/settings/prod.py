@@ -2,7 +2,6 @@ from ctypes import cast
 from .base import *
 import django_heroku
 
-django_heroku.settings(locals())
 
 DATABASES = {
         'default': {
@@ -26,3 +25,6 @@ CACHES = {
 
 DEBUG = config('DEBUG', False, cast=bool)
 ALLOWED_HOSTS = ["gowithease.herokuapp.com"]
+
+
+django_heroku.settings(locals())
