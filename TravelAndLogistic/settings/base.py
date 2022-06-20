@@ -16,7 +16,6 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
@@ -203,3 +202,5 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = "haryournifemijt@gmail.com"
 EMAIL_HOST_PASSWORD = config("EMAIL_PASSWORD")
 EMAIL_USE_TLS = True
+
+
