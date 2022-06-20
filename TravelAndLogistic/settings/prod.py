@@ -33,7 +33,7 @@ CACHES = {
 '''
 DEBUG = config('DEBUG', False, cast=bool)
 ALLOWED_HOSTS += ["gowithease.herokuapp.com","*"]
-#STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.ManifestStaticFilesStorage"
+#STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 django_heroku.settings(locals())
