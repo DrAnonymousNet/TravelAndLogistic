@@ -14,4 +14,4 @@ drf-yasg==1.20.0
 PyYAML==6.0
 whitenoise
 python-decouple
-coresheaders
+django-cors-headers
