@@ -105,7 +105,7 @@ class LocationApiView(
 
 @method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class ReviewApiView(APIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = ReviewSerializer
 
@@ -198,7 +198,7 @@ class ReviewIndividualApiView(APIView):
 @method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class TransportPriceListCreateApiView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    authentication_classes = [JWTAuthentication] 
+    authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     serializer_class = TransportPriceCreateSerializer
     lookup_field = "company_id"
     queryset = TransportPrice.objects.all()
@@ -238,7 +238,7 @@ class TransportPriceListCreateApiView(generics.ListCreateAPIView):
 @method_decorator(name="delete", decorator=swagger_auto_schema())
 class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     serializer_class = TransportPriceReadSerializer
     queryset = TransportPrice.objects.all()
     lookup_field = "price_id"
