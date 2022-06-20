@@ -13,4 +13,4 @@ djoser==2.1.0
 drf-yasg==1.20.0
 PyYAML==6.0
 whitenoise
-decouple
+python-decouple
