@@ -1,1 +1,1 @@
-web: gunicorn TravelAndLogistc.wsgi
+web: gunicorn TravelAndLogistic.wsgi
