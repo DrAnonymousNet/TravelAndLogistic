@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
      'rest_framework_simplejwt',
      'djoser',
-    authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
+     "corsheaders",
      "django_filters",
      'drf_yasg',
 
