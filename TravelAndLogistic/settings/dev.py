@@ -1,3 +1,4 @@
+
 from .base import *
 
 
@@ -21,4 +22,5 @@ CACHES = {
 '''
 
 '''
-DEBUG = config('DEBUG', False, cast=bool)
+#DEBUG = config('DEBUG', False, cast=bool)
+DEBUG = False

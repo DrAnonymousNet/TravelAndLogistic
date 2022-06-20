@@ -32,7 +32,7 @@ CACHES = {
 }
 '''
 DEBUG = config('DEBUG', False, cast=bool)
-ALLOWED_HOSTS = ["gowithease.herokuapp.com"]
+ALLOWED_HOSTS += ["gowithease.herokuapp.com"]
 
 
 django_heroku.settings(locals())
