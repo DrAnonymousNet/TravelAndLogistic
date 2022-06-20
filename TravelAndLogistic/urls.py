@@ -41,12 +41,12 @@ urlpatterns = [
     path("tickets/<int:pk>/payment-verify/", payment_verify,name = "ticket-payment-verify"),
 
     path("companies/", TransportCompanyCreateApiView.as_view(), name="transport_create"),
-    path("companies/<int:pk>/", TransportCompanyApiView.as_view(), name="transport-crud"),
-    path("companies/<int:pk>/reviews/", ReviewApiView.as_view(), name="review"),
-    path("companies/<int:pk>/prices/", TransportPriceListCreateApiView.as_view(), name="price"),
-    path("companies/<int:pk>/prices/<int:id>/", TransportPriceApiView.as_view(), name="price-crud"),
-    path("companies/<int:pk>/reviews/", ReviewApiView.as_view(), name="review-create"),
-    path("companies/<int:pk>/reviews/<int:id>/", ReviewIndividualApiView.as_view(), name="review-crud"),
+    path("companies/<int:company_id>/", TransportCompanyApiView.as_view(), name="transport-crud"),
+    path("companies/<int:company_id>/reviews/", ReviewApiView.as_view(), name="review"),
+    path("companies/<int:company_id>/prices/", TransportPriceListCreateApiView.as_view(), name="price"),
+    path("companies/<int:company_id>/prices/<int:price_id>/", TransportPriceApiView.as_view(), name="price-crud"),
+    path("companies/<int:comapny_id>/reviews/", ReviewApiView.as_view(), name="review-create"),
+    path("companies/<int:company_id>/reviews/<int:review_id>/", ReviewIndividualApiView.as_view(), name="review-crud"),
 
     
     path("locations/", LocationCreateListApiView.as_view(), name="location-create-list"),

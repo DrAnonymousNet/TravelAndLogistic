@@ -1,4 +1,5 @@
 
+from cgitb import lookup
 from django.urls import reverse
 from rest_framework import serializers, status
 from .models import *
@@ -8,12 +9,11 @@ class ClientException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
 class TransportCompanySerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='transport-crud', lookup_field = "pk")
+    url= serializers.SerializerMethodField()
     review = serializers.SerializerMethodField()
     class Meta:
         model = TransportCompany
         fields = ["url",
-
                 "name",
                 "park",
                 "lugage_policy",
@@ -28,6 +28,9 @@ class TransportCompanySerializer(serializers.ModelSerializer):
     def get_park(self, obj):
         qs = obj.location.all()
         return LocationSerializer(qs, many=True).data
+
+    def get_url(self, obj):
+        return reverse("transport-crud", kwargs={"company_id":obj.id})
 
 
     def get_review(self, obj):
@@ -51,6 +54,7 @@ class LocationSerializer(serializers.ModelSerializer):
                 "read_only":True
                 }
             }
+
     def validate(self, attrs):
         ''
         for value in attrs:
@@ -152,7 +156,7 @@ class TransportPriceCreateSerializer(serializers.ModelSerializer):
             }
         }'''
     def get_url(self, obj):
-        return reverse("price-crud", kwargs={"id":obj.id, "pk":obj.company.pk})
+        return reverse("price-crud", kwargs={"price_id":obj.id, "company_id":obj.company.pk})
     def get_company(self, obj):
         return obj.company.name
     

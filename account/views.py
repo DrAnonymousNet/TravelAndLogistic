@@ -6,6 +6,17 @@ from rest_framework import authentication
 from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication, JWTAuthentication
 from .otp_verification_handler import OTPVerifcation
 from .models import User
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+# Create your views here.
+
+params=[openapi.Parameter(name="OTP",
+                            required=True,
+                            type="integer",
+                            in_="path",
+                            description="OTP to be verified")                           
+]
 
 # Create your views here.
 
@@ -41,7 +52,9 @@ class LogoutView(APIView):
         logout(request)
         return request.Response()
 
-'''         
+'''
+
+@method_decorator(name="post", decorator=swagger_auto_schema(request_body=OTPSerializer))
 class OTPAPIView(APIView):
 
     def post(self, *args, **kwargs):

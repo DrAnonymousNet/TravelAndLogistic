@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
      'rest_framework_simplejwt',
      'djoser',
+     "corsheaders",
      "django_filters",
      'drf_yasg',
 
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -164,6 +166,7 @@ DJOSER = {
     "USER_CREATE_PASSWORD_RETYPE":True,
     "PASSWORD_RESET_RETYPE":True,
     "USERNAME_RESET_CONFIRM_URL":"email/reset/{uid}/{token}",
+    "USERNAME_RESET_CONFIRM_URL":"email/reset/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL":"password/reset/{uid}/{token}",
     "ACTIVATION_URL":"activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL":True,
@@ -186,9 +189,18 @@ SWAGGER_SETTINGS = {
     'JSON_EDITOR': True,
 }
 
+CORS_ALLOWED_ORIGINS: True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "haryournifemijt@gmail.com"
-EMAIL_HOST_PASSWORD ="uogqxmepgnilevmg"
+EMAIL_HOST_PASSWORD = config("EMAIL_PASSWORD")
 EMAIL_USE_TLS = True

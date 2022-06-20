@@ -1,6 +1,7 @@
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
 from djoser import permissions
+from importlib_metadata import method_cache
 from requests import request
 from .serializers import *
 from rest_framework.views import APIView 
@@ -19,6 +20,8 @@ from .permissions import IsOwnerOnly, IsOwnerOrReadOnly
 from rest_framework.decorators import permission_classes
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.db import transaction
+from django.views.decorators.cache import cache_control, cache_page
 # Create your views here.
 
 params=[openapi.Parameter(name="company_id",
@@ -41,27 +44,27 @@ params2=[openapi.Parameter(name="id",
 def index(request):
     return render(request, "index.html")
 
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class TransportCompanyCreateApiView(generics.ListCreateAPIView):
  
     serializer_class = TransportCompanySerializer
     queryset = TransportCompany.objects.all()
     authentication_classes = [JWTAuthentication, BasicAuthentication]
-    permission_classes = [permissions.IsAdminUser]
-
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)
-
+    permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticatedOrReadOnly]
+    lookup_field = "company_id"
+    
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class TransportCompanyApiView(
     generics.RetrieveUpdateDestroyAPIView
     ):
-    permission_classes = [IsOwnerOrReadOnly, permissions.IsAdminUser]
+    permission_classes = [permissions.IsAdminUser]
     authentication_classes = [JWTAuthentication, BasicAuthentication]
     serializer_class = TransportCompanySerializer
     queryset= TransportCompany.objects.all()
 
 
     def get_object(self):
-        company_id = self.kwargs.get("pk")
+        company_id = self.kwargs.get("company_id")
         try:
             obj = self.get_queryset().get(id = company_id)
         except:
@@ -70,7 +73,7 @@ class TransportCompanyApiView(
         return obj
 
 
-
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class LocationCreateListApiView(generics.ListCreateAPIView):
     permission_classes= [permissions.IsAuthenticatedOrReadOnly,permissions.IsAdminUser, IsOwnerOrReadOnly]
     serializer_class = LocationSerializer
@@ -90,6 +93,7 @@ class LocationCreateListApiView(generics.ListCreateAPIView):
         return city
 '''
 
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class LocationApiView(
     generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "pk"
@@ -99,7 +103,7 @@ class LocationApiView(
 
 
 
-
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class ReviewApiView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -109,7 +113,7 @@ class ReviewApiView(APIView):
     def post(self,request,*args, **kwargs):
         """Creates a new Review per Company"""
         print(request.user)
-        company_id = kwargs.get("pk")
+        company_id = kwargs.get("company_id")
         try:
             company = TransportCompany.objects.get(id=company_id)
         except:
@@ -126,15 +130,16 @@ class ReviewApiView(APIView):
         serializer = ReviewSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class ReviewIndividualApiView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
     serializer_class = ReviewSerializer
     
 
-    @swagger_auto_schema(manual_parameters=params, responses={200:ReviewSerializer(many=True)})
+    @swagger_auto_schema(responses={200:ReviewSerializer(many=True)})
     def get(self, request, *args, **kwargs):
-        review_id = kwargs.get("id")
+        review_id = kwargs.get("review_id")
         try:
             review = Review.objects.get(id = review_id)
         except:
@@ -143,10 +148,10 @@ class ReviewIndividualApiView(APIView):
         serializer = ReviewSerializer(instance=review)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    @swagger_auto_schema(manual_parameters=params,    
+    @swagger_auto_schema( 
         request_body=ReviewSerializer, responses={200:ReviewSerializer(many=True)})
     def put(self, request, *args, **kwargs):
-        review_id = kwargs.get("id")
+        review_id = kwargs.get("review_id")
         try:
             review = Review.objects.get(id = review_id)
         except:
@@ -158,10 +163,10 @@ class ReviewIndividualApiView(APIView):
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(manual_parameters=params,
+    @swagger_auto_schema(
         request_body=ReviewSerializer)
     def delete(self, request, **kwargs):
-        review_id = kwargs.get("id")
+        review_id = kwargs.get("review_id")
         try:
             review = Review.objects.get(id = review_id)
         except:
@@ -170,11 +175,10 @@ class ReviewIndividualApiView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(
-        manual_parameters=params,        
+    @swagger_auto_schema(     
         request_body=ReviewSerializer,responses={200:ReviewSerializer(many=True)})
     def patch(self, request, **kwargs):
-        review_id = kwargs.get("id")
+        review_id = kwargs.get("review_id")
         try:
             review = Review.objects.get(id = review_id)
         except:
@@ -190,22 +194,23 @@ class ReviewIndividualApiView(APIView):
 
 "/transports/ -- all"
 "/transports/id -- crud"
-        
+
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class TransportPriceListCreateApiView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication] 
     serializer_class = TransportPriceCreateSerializer
-    lookup_field = "pk"
+    lookup_field = "company_id"
     queryset = TransportPrice.objects.all()
     
 
     
-    @swagger_auto_schema(responses={200:TransportPriceCreateSerializer},manual_parameters=params2)
+    @swagger_auto_schema(responses={200:TransportPriceCreateSerializer})
     def get(self, request, *args, **kwargs):
         "Get the list of transport price for the company with the given ID"
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(request_body=TransportPriceCreateSerializer, responses={200:TransportPriceCreateSerializer}, manual_parameters=params2)
+    @swagger_auto_schema(request_body=TransportPriceCreateSerializer, responses={200:TransportPriceCreateSerializer})
     def post(self, request, *args, **kwargs):
         "Creates a new transport price for the company with the given ID"
 
@@ -213,12 +218,12 @@ class TransportPriceListCreateApiView(generics.ListCreateAPIView):
 
     
     def get_queryset(self, **kwargs):
+        qs = super().get_queryset()
         company_id = self.kwargs.get(self.lookup_field)
-        queryset = TransportPrice.objects.filter(company_id  = company_id)        
+        queryset = qs.filter(company_id  = company_id)        
         return queryset
 
     def get_serializer_context(self):
-        print("hello")
         company_id = self.kwargs.get(self.lookup_field)
         context =  super().get_serializer_context()
         company = TransportCompany.objects.get(id = company_id)
@@ -227,20 +232,20 @@ class TransportPriceListCreateApiView(generics.ListCreateAPIView):
 
     
 
-@method_decorator(name="get", decorator=swagger_auto_schema(manual_parameters=params, responses={200:TransportPriceReadSerializer(many=True)}))
-@method_decorator(name="put", decorator=swagger_auto_schema(manual_parameters=params, request_body=TransportPriceReadSerializer))
-@method_decorator(name="patch", decorator=swagger_auto_schema(manual_parameters=params, request_body=TransportPriceReadSerializer))
-@method_decorator(name="delete", decorator=swagger_auto_schema(manual_parameters=params))
+@method_decorator(name="get", decorator=swagger_auto_schema( responses={200:TransportPriceReadSerializer(many=True)}))
+@method_decorator(name="put", decorator=swagger_auto_schema(request_body=TransportPriceReadSerializer))
+@method_decorator(name="patch", decorator=swagger_auto_schema(request_body=TransportPriceReadSerializer))
+@method_decorator(name="delete", decorator=swagger_auto_schema())
 class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     authentication_classes = [JWTAuthentication]
     serializer_class = TransportPriceReadSerializer
     queryset = TransportPrice.objects.all()
-    lookup_field = "pk"
+    lookup_field = "price_id"
     
     def get_object(self):
-        price_id = self.kwargs["id"]
-        print(self.kwargs)
+        price_id = self.kwargs["price_id"]
+        print(self.kwargs, "\n\n\n")
         try:
             obj = self.get_queryset().get(id =price_id)
         except:
@@ -248,29 +253,24 @@ class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return obj
 
-    def get_queryset(self):
-        company_id = self.kwargs["pk"]
-        query_set = TransportPrice.objects.filter(
-            company__id= company_id)
-        
-        return query_set
+
 
     def get_serializer_context(self, **kwargs):
-        company_id = self.kwargs.get(self.lookup_field)
+        company_id = self.kwargs.get("company_id")
         print(self.kwargs, self.lookup_url_kwarg)
-        print(company_id, "FIFJIFOQFOF\n\n\n")
         context =  super().get_serializer_context()
         company = TransportCompany.objects.get(id = company_id)
         context["company"] = company
         return context
 
-
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class TicketApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TicketSerializer
     query_set = Ticket.objects.all()
     lookup_field = "pk" 
 
+    @swagger_auto_schema( responses={200:TicketSerializer})
     def get(self, *args, **kwargs):
 
         pk = kwargs.get("pk")
@@ -282,6 +282,7 @@ class TicketApiView(APIView):
         serializer = TicketListSerializer(instance=qs, context ={"request":self.request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+    @swagger_auto_schema(request_body=TicketSerializer, responses={202:TicketSerializer})
     def put(self, *args, **kwargs):
         
 
@@ -304,6 +305,8 @@ class TicketApiView(APIView):
         qs.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    
+@method_decorator(name="get", decorator=cache_page(time_out=60*5))
 class TicketCreateView(generics.CreateAPIView, generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -327,27 +330,35 @@ class TicketCreateView(generics.CreateAPIView, generics.ListAPIView):
         context["request"] = self.request
         return context
 
-
-@api_view(["POST", "GET"])
+@api_view(http_method_names=["GET"])
+@swagger_auto_schema(responses={200:{
+  "status": "success",
+  "message": "Hosted Link",
+  "data": {
+    "link": "https://api.flutterwave.com/v3/hosted/pay/f524c1196ffda5556341"
+  }
+}})
 @permission_classes([IsOwnerOnly])
-
 def pay_for_ticket(request, pk=None, *args, **kwargs):
+    "API Endpoint to get flutterwave payment page for ticket"
     ticket = Ticket.objects.get(id =pk)
     if ticket.paid:
         return Response({"message":"You have paid for this ticket"})
     pay = TicketPayment(ticket=ticket, request=request)
-    return redirect(pay.link)
-    
+    #return redirect(pay.link)
+    return Response(status=status.HTTP_200_OK, data=pay.response)
     #return Response( status=status.HTTP_200_OK)
 
 
-@api_view(["POST", "GET"])
+@api_view(["GET"])
+@swagger_auto_schema(auto_schema=None)
 def payment_verify(request, pk, *args, **kwargs):
-    ticket = Ticket.objects.get(id =pk)
-    if verify_transaction(request, ticket):
-        
-        ticket.paid = True
-        ticket.save()
-        serializer = TicketSerializer(instance=ticket)
-        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+    with transaction.atomic():
+        ticket = Ticket.objects.get(id =pk)
+        if verify_transaction(request, ticket):
+            
+            ticket.paid = True
+            ticket.save()
+            serializer = TicketSerializer(instance=ticket)
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
     return Response(status=status.HTTP_406_NOT_ACCEPTABLE)

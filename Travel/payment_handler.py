@@ -3,12 +3,13 @@ import datetime
 import math
 import random
 import re
+from urllib import response
 from django.urls import reverse
 from rest_framework.request import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, resolve_url
 import requests
 from django.core.cache import cache
-
+from decouple import config
 from .models import Ticket, TransactionTx
 from .serializers import TransactionSerializer
 
@@ -25,11 +26,12 @@ class TicketPayment:
     ticket : Ticket = None
     request : HttpRequest = None
     link : str = None
-
+    response = None
     def __post_init__(self):
-        link = self.get_payment_link()
-        if link:
-            self.link = link
+        response = self.get_payment_link()
+        #if link:
+        #    self.link = link
+        self.response = response
             
 
     
@@ -43,7 +45,7 @@ class TicketPayment:
 
     def get_flutterwave_data(self, url, headers={}, data = None):
         headers["Content-Type"] = 'application/json'
-        headers["Authorization"] = env("FLUTTER_KEY")
+        headers["Authorization"] = config("FLUTTER_KEY")
         print(headers)
         response = requests.post(url, headers=headers, json=data )
         return response
@@ -77,9 +79,10 @@ class TicketPayment:
         data = self.assemble_payment_detail()
         url ="https://api.flutterwave.com/v3/payments"
         response = self.get_flutterwave_data(url=url, data=data)
+        print(response.json())
         if response.json()["status"] == "success":
             link = response.json()["data"]["link"]
-            return link
+            return response
         return None
 
 
@@ -90,7 +93,7 @@ def verify_transaction(request, ticket):
     url = f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify'
     headers = {}
     headers["Content-Type"] = 'application/json'
-    headers["Authorization"] = env("FLUTTER_KEY")
+    headers["Authorization"] = config("FLUTTER_KEY")
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         
