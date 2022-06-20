@@ -42,7 +42,7 @@ params2=[openapi.Parameter(name="id",
 def index(request):
     return render(request, "index.html")
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class TransportCompanyCreateApiView(generics.ListCreateAPIView):
  
     serializer_class = TransportCompanySerializer
@@ -51,7 +51,7 @@ class TransportCompanyCreateApiView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticatedOrReadOnly]
     lookup_field = "company_id"
     
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class TransportCompanyApiView(
     generics.RetrieveUpdateDestroyAPIView
     ):
@@ -71,7 +71,7 @@ class TransportCompanyApiView(
         return obj
 
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class LocationCreateListApiView(generics.ListCreateAPIView):
     permission_classes= [permissions.IsAuthenticatedOrReadOnly,permissions.IsAdminUser, IsOwnerOrReadOnly]
     serializer_class = LocationSerializer
@@ -91,7 +91,7 @@ class LocationCreateListApiView(generics.ListCreateAPIView):
         return city
 '''
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class LocationApiView(
     generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "pk"
@@ -101,7 +101,7 @@ class LocationApiView(
 
 
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class ReviewApiView(APIView):
     authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -128,7 +128,7 @@ class ReviewApiView(APIView):
         serializer = ReviewSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class ReviewIndividualApiView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
@@ -193,7 +193,7 @@ class ReviewIndividualApiView(APIView):
 "/transports/ -- all"
 "/transports/id -- crud"
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class TransportPriceListCreateApiView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
@@ -229,7 +229,7 @@ class TransportPriceListCreateApiView(generics.ListCreateAPIView):
         return context
 
     
-
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 @method_decorator(name="get", decorator=swagger_auto_schema( responses={200:TransportPriceReadSerializer(many=True)}))
 @method_decorator(name="put", decorator=swagger_auto_schema(request_body=TransportPriceReadSerializer))
 @method_decorator(name="patch", decorator=swagger_auto_schema(request_body=TransportPriceReadSerializer))
@@ -261,7 +261,7 @@ class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
         context["company"] = company
         return context
 
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class TicketApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TicketSerializer
@@ -304,7 +304,7 @@ class TicketApiView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     
-@method_decorator(name="get", decorator=cache_page(time_out=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class TicketCreateView(generics.CreateAPIView, generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
