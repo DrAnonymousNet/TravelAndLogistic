@@ -6,7 +6,7 @@ DATABASES = {
             'NAME': config('POSTGRES_NAME'),
             'USER': config('POSTGRES_USER'),
             'PASSWORD': config('POSTGRES_PASSWORD'),
-            'HOST': 'db',
+            'HOST': '',
             'PORT': 5432,
         }
     }
@@ -22,3 +22,4 @@ CACHES = {
 
 DEBUG = config('DEBUG', False, cast=bool)
 ALLOWED_HOSTS = ["gowithease.herokuapp.com"]
+django_on_heroku.settings(locals())

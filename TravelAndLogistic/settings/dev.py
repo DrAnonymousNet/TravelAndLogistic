@@ -22,4 +22,3 @@ CACHES = {
 
 '''
 DEBUG = config('DEBUG', False, cast=bool)
-django_on_heroku.settings(locals())
