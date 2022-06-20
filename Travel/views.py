@@ -1,8 +1,6 @@
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
 from djoser import permissions
-from importlib_metadata import method_cache
-from requests import request
 from .serializers import *
 from rest_framework.views import APIView 
 from rest_framework import generics
