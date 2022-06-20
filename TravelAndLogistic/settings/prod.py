@@ -22,4 +22,4 @@ CACHES = {
 
 DEBUG = config('DEBUG', False, cast=bool)
 ALLOWED_HOSTS = ["gowithease.herokuapp.com"]
-django_on_heroku.settings(locals())
+django_heroku.settings(locals())

@@ -15,4 +15,4 @@ PyYAML==6.0
 whitenoise
 python-decouple
 django-cors-headers
-django-on-heroku
+django-heroku
