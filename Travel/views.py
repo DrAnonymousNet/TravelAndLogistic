@@ -1,4 +1,5 @@
-from contextvars import Context
+
+import json
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
 from djoser import permissions
@@ -20,6 +21,7 @@ from rest_framework.decorators import permission_classes
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
+from django.urls.resolvers import RoutePattern
 from django.views.decorators.cache import cache_control, cache_page
 # Create your views here.
 
@@ -353,6 +355,17 @@ class TicketCreateView(generics.CreateAPIView, generics.ListAPIView):
         context["request"] = self.request
         return context
 
+    def dispatch(self, request, *args, **kwargs):
+        print(args, kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method == "POST":
+            url = request.build_absolute_uri(reverse("ticket", kwargs = {"pk":response.data.get("id")}))
+            payment_url = request.build_absolute_uri(reverse("ticket-payment", kwargs = {"pk":response.data.get("id")}))
+            response.data["Payment Link"] = payment_url
+            response.headers["Location"] = url
+
+        return response
+
 @api_view(http_method_names=["GET"])
 @swagger_auto_schema(responses={200:{
   "status": "success",
@@ -369,6 +382,8 @@ def pay_for_ticket(request, pk=None, *args, **kwargs):
         return Response({"message":"You have paid for this ticket"})
     pay = TicketPayment(ticket=ticket, request=request)
     #return redirect(pay.link)
+    #data = json.dumps(pay.response.data)
+    print()
     return Response(status=status.HTTP_200_OK, data=pay.response)
     #return Response( status=status.HTTP_200_OK)
 

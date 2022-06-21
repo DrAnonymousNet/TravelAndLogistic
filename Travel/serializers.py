@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import serializers, status
@@ -7,51 +8,7 @@ from rest_framework.exceptions import APIException
 class ClientException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
-class TransportCompanyWriteSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = TransportCompany
-        fields = [
-                "name",
-                "park",
-                "lugage_policy",
-        ]
-
-class TransportCompanyReadSerializer(serializers.ModelSerializer):
-    url= serializers.SerializerMethodField()
-    park = serializers.SerializerMethodField()
-    review = serializers.SerializerMethodField()
-    class Meta:
-        model = TransportCompany
-        fields = ["url",
-                "name",
-                "park",
-                "lugage_policy",
-                "review"
-        ]
-                        
-        extra_kwargs = {
-            "review":{"read_only":True},
-            "url":{"read_only":True}
-        }
-
-    def get_park(self, obj):
-        qs = obj.park.all()
-        request = self.context.get("request")
-        serializer = LocationSerializer(qs, many=True, context={"request":request}).data
-        return serializer
-
-    def get_url(self, obj):
-        request = self.context.get("request")
-        scheme = request.is_secure() and "https" or "http"
-        return f'{scheme}://{request.get_host()}'+reverse("transport-crud", kwargs={"company_id":obj.id})
-
-
-    def get_review(self, obj):
-        request = self.context.get("request")
-        qs = obj.review_set.all()
-        return ReviewSerializer(qs, many=True, context={"request":request}).data
-    
 
 class LocationSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="location-crud", lookup_field="pk")
@@ -89,8 +46,7 @@ class LocationSerializer(serializers.ModelSerializer):
             raise ClientException(e)
 
         
-        
-
+    
 
 class TransportPriceReadSerializer(serializers.ModelSerializer):
     company = serializers.SerializerMethodField()
@@ -207,6 +163,61 @@ class TransportPriceCreateSerializer(serializers.ModelSerializer):
         return price[0]
 
 
+
+class TransportCompanyWriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TransportCompany
+        fields = [
+                "name",
+                "park",
+                "lugage_policy",
+        ]
+
+class TransportCompanyReadSerializer(serializers.ModelSerializer):
+    url= serializers.SerializerMethodField()
+    park = serializers.SerializerMethodField()
+    review = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    class Meta:
+        model = TransportCompany
+        fields = ["url",
+                "name",
+                "park",
+                "lugage_policy",
+                "review",
+                "price",
+        ]
+                        
+        extra_kwargs = {
+            "review":{"read_only":True},
+            "url":{"read_only":True},
+            "price":{"read_only":True}
+        }
+
+    def get_park(self, obj):
+        qs = obj.park.all()
+        request = self.context.get("request")
+        serializer = LocationSerializer(qs, many=True, context={"request":request}).data
+        return serializer
+
+    def get_url(self, obj):
+        request = self.context.get("request")
+        scheme = request.is_secure() and "https" or "http"
+        return f'{scheme}://{request.get_host()}'+reverse("transport-crud", kwargs={"company_id":obj.id})
+
+
+    def get_review(self, obj):
+        request = self.context.get("request")
+        qs = obj.review_set.all()
+        return ReviewSerializer(qs, many=True, context={"request":request}).data
+    
+    def get_price(self, obj):
+        context = self.context
+        qs = obj.transportprice_set.all()
+        return TransportPriceReadSerializer(qs, many=True, context=context).data
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionTx
@@ -274,10 +285,12 @@ class TicketListSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         company = self.transport_company
-        if self.from_location not in company.park:
+        if self.from_location not in company.park.all():
             raise serializers.ValidationError(f"{self.from_location} not in list of {self.transport_company} parks")
-        if self.to_location not in company.park:
+        if self.to_location not in company.park.all():
             raise serializers.ValidationError(f"{self.to_location} not in list of {self.transport_company} parks")
+
+        
         return super().validate(attrs)
 
  
@@ -334,11 +347,18 @@ class TicketSerializer(serializers.ModelSerializer):
         transport_company = attrs["transport_company"]
         from_location = attrs["from_location"]
         to_location = attrs["to_location"]
+        car_type = attrs["car_type"]
 
         if from_location not in transport_company.park.all():
             raise serializers.ValidationError(f"{from_location} not in list of {transport_company} parks")
         if to_location not in transport_company.park.all():
             raise serializers.ValidationError(f"{to_location} not in list of {transport_company} parks")
+        try:
+            transport_company.transportprice_set.get(from_location=from_location,
+                                                       to_location=to_location,car_type=car_type)
+        except Exception as e:
+            print(e)
+            raise serializers.ValidationError(f"The {transport_company} price information is not available for trip from {from_location} to {to_location} and car type of {car_type}")
         return super().validate(attrs)
 
 

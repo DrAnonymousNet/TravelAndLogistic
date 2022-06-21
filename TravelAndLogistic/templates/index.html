@@ -1,18 +1,48 @@
+<h1>GoWithEase API</h1>
+<p>This is an API built with Django Rest Framework that allows general users to book and pay for transport ticket.</p>
+<p>The available endpoints define task based on user permissions.</p>
+<p>The API allows administrative users to perform administrative task listed below so that the general users can Book Ticket with ease </p>
+
 <h3> DrA says grab a coffee and view the <a href="{% url 'schema-swagger-ui'%}">docs</a></h3>
 
 
 <p>To use the browsable API interface, 
     you definitely want to <a href="{% url 'session-login'%}">Login</a>
-     Everything is protected down there</p>
+     Everything is protected down there (Session Auth)</p>
 
-<p>You don't have an account ? Ma foo !, I gat you cover -> <a href="localhost:8000/auth/users/">Create Account</a></p>
-
-<p>Things you can do:</p>
+<p>You don't have an account ? Ma foo !, I gat you cover -> <a href="localhost:8000/auth/users/">Create Account</a> But you have to verify your email also </p>
+<p>You want to use one of my Test Users ? No Wahala, We gather dey:</p>
+<ul>
+    <li>Username: haryourjb3@gmail.com</li>
+    <li>Password:12345</li>
+</ul>
+<p>Administrative Things you can do:</p>
 <ul>
 <li>
-    <a href="{%url 'transport_create'%}">Create a new Traveling Company</a>
+    <p>Create a new Traveling <a href="{%url 'transport_create'%}">Company</a>
+    </p>
+</li>
+<li>
+    <p>Create a new Traveling <a href="{%url 'location-create-list'%}"> Park</a>
+    </p>
+</li>
+    <li>
+        <p>Create transport <a href="{%url 'price' 1%}">price</a> per company </p>
+    </li>
+</ul>
+<p>Normal User Things you can do</p>
+
+<ul>
+<li>
+<p> Book a <a href="{%url 'ticket-create'%}">Ticket</a></p>
+</li>
+<li>
+    <p>Give traveling company a <a href="{%url 'review-create' 1 %}">review</a></p>
+</li>
+<li>
+    <p><a href="{%url 'ticket-payment' 1%}">Pay</a> for Ticket</p>
 </li>
 
-
-
 </ul>
+All the above task support other CRUD operations
+

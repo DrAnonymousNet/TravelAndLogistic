@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import datetime
+import json
 import math
 import random
 import re
@@ -26,7 +27,7 @@ class TicketPayment:
     ticket : Ticket = None
     request : HttpRequest = None
     link : str = None
-    response = None
+    response : json = None
     def __post_init__(self):
         response = self.get_payment_link()
         #if link:
@@ -79,11 +80,9 @@ class TicketPayment:
         data = self.assemble_payment_detail()
         url ="https://api.flutterwave.com/v3/payments"
         response = self.get_flutterwave_data(url=url, data=data)
-        print(response.json())
-        if response.json()["status"] == "success":
-            link = response.json()["data"]["link"]
-            return response
-        return None
+        #print(response.json())
+        return response.json()
+        
 
 
     
