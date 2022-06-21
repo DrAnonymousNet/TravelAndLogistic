@@ -12,7 +12,7 @@ django-rest-framework==0.1.0
 djoser==2.1.0
 drf-yasg==1.20.0
 PyYAML==6.0
-whitenoise
+whitenoise==5.3.0
 python-decouple
 django-cors-headers
 django-heroku
