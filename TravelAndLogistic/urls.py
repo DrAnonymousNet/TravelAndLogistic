@@ -34,6 +34,8 @@ urlpatterns = [
     #path('auth/', include('djoser.urls.authtoken')),
     path("otp/<str:phone_number>/", OTPAPIView.as_view(), name="otp"),
 
+    path("login/", LoginUserApiView.as_view(),name="session-login"),
+    path("login/", LogoutView.as_view(),name="session-logout"),
 
     path("tickets/", TicketCreateView.as_view(), name= "ticket-create"),
     path("tickets/<int:pk>/", TicketApiView.as_view(), name = "ticket"),

@@ -1,15 +1,25 @@
-
-from cgitb import lookup
+from django.db import transaction
 from django.urls import reverse
 from rest_framework import serializers, status
 from .models import *
 from rest_framework.exceptions import APIException
-        
+
 class ClientException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
-class TransportCompanySerializer(serializers.ModelSerializer):
+class TransportCompanyWriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TransportCompany
+        fields = [
+                "name",
+                "park",
+                "lugage_policy",
+        ]
+
+class TransportCompanyReadSerializer(serializers.ModelSerializer):
     url= serializers.SerializerMethodField()
+    park = serializers.SerializerMethodField()
     review = serializers.SerializerMethodField()
     class Meta:
         model = TransportCompany
@@ -26,17 +36,21 @@ class TransportCompanySerializer(serializers.ModelSerializer):
         }
 
     def get_park(self, obj):
-        qs = obj.location.all()
-        return LocationSerializer(qs, many=True).data
+        qs = obj.park.all()
+        request = self.context.get("request")
+        serializer = LocationSerializer(qs, many=True, context={"request":request}).data
+        return serializer
 
     def get_url(self, obj):
-        return reverse("transport-crud", kwargs={"company_id":obj.id})
+        request = self.context.get("request")
+        scheme = request.is_secure() and "https" or "http"
+        return f'{scheme}://{request.get_host()}'+reverse("transport-crud", kwargs={"company_id":obj.id})
 
 
     def get_review(self, obj):
+        request = self.context.get("request")
         qs = obj.review_set.all()
-        print( ReviewSerializer(qs, many=True).data)
-        return ReviewSerializer(qs, many=True).data
+        return ReviewSerializer(qs, many=True, context={"request":request}).data
     
 
 class LocationSerializer(serializers.ModelSerializer):
@@ -156,7 +170,11 @@ class TransportPriceCreateSerializer(serializers.ModelSerializer):
             }
         }'''
     def get_url(self, obj):
-        return reverse("price-crud", kwargs={"price_id":obj.id, "company_id":obj.company.pk})
+        request = self.context.get("request")
+        scheme = request.is_secure() and "https" or "http"
+        return f'{scheme}://{request.get_host()}'+reverse("price-crud", kwargs={"company_id":obj.company.id, "price_id":obj.id})
+
+    
     def get_company(self, obj):
         return obj.company.name
     
@@ -168,17 +186,22 @@ class TransportPriceCreateSerializer(serializers.ModelSerializer):
 
         #from_loc = LocationSerializer(data = validated_from_location, context={"no-create":True})
         #to_loc = LocationSerializer(data=validated_to_location)
-        print(validated_from_location)
-        from_loc = Location.objects.get_or_create(**validated_from_location)
-        to_loc = Location.objects.get_or_create(**validated_to_location)
-        #company = TransportCompany.objects.get()
-        print(from_loc, to_loc)
-        price = TransportPrice.objects.get_or_create(
-            **validated_data,
-            from_location_id=from_loc[0].id,
-            to_location_id=to_loc[0].id,
-            company_id=company.id
-        )
+        with transaction.atomic():
+            from_loc = Location.objects.get_or_create(**validated_from_location)
+            to_loc = Location.objects.get_or_create(**validated_to_location)
+            if from_loc[0] not in company.park.all():
+                company.park.add(from_loc[0])
+            if to_loc not in company.park.all():
+                company.park.add(to_loc[0])
+            company.save()
+            #company = TransportCompany.objects.get()
+
+            price = TransportPrice.objects.get_or_create(
+                **validated_data,
+                from_location_id=from_loc[0].id,
+                to_location_id=to_loc[0].id,
+                company_id=company.id
+            )
         if price[1]:
             return price[0]
         return price[0]
@@ -191,11 +214,13 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
     author = serializers.PrimaryKeyRelatedField(read_only = True)
     company = serializers.PrimaryKeyRelatedField(read_only = True)
     class Meta:
         model= Review
         fields = [
+            "url",
             "id",
             "author",
             "content",
@@ -207,6 +232,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         validated_data["company"] = self.context["company"]
         return super().create(validated_data)
 
+    def get_url(self, obj):
+        request = self.context.get("request")
+        scheme = request.is_secure() and "https" or "http"
+        return f'{scheme}://{request.get_host()}'+reverse("review-crud", kwargs={"company_id":obj.company.id, "review_id":obj.id})
+
+
+
 
 
 
@@ -215,6 +247,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class TicketListSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="ticket")
     #car_type = serializers.SerializerMethodField()
     transport_company = serializers.StringRelatedField()
     from_location = LocationSerializer()
@@ -225,6 +258,7 @@ class TicketListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields= [
+            "url",
             'user',
             "id",
             "date",
@@ -238,16 +272,26 @@ class TicketListSerializer(serializers.ModelSerializer):
             "paid",
         ]
 
+    def validate(self, attrs):
+        company = self.transport_company
+        if self.from_location not in company.park:
+            raise serializers.ValidationError(f"{self.from_location} not in list of {self.transport_company} parks")
+        if self.to_location not in company.park:
+            raise serializers.ValidationError(f"{self.to_location} not in list of {self.transport_company} parks")
+        return super().validate(attrs)
+
  
 
 
 
 class TicketSerializer(serializers.ModelSerializer):
+   
     #transport_company = serializers.StringRelatedField()
     paid = serializers.BooleanField(read_only=True)
     class Meta:
         model = Ticket
         fields= [
+            
             "id",
             "date",
             "time",
@@ -285,6 +329,18 @@ class TicketSerializer(serializers.ModelSerializer):
         #per_price = validated_data.get("car_type").price
         instance.price = validated_data["price"]
         return super().update(instance, validated_data)
+
+    def validate(self, attrs):
+        transport_company = attrs["transport_company"]
+        from_location = attrs["from_location"]
+        to_location = attrs["to_location"]
+
+        if from_location not in transport_company.park.all():
+            raise serializers.ValidationError(f"{from_location} not in list of {transport_company} parks")
+        if to_location not in transport_company.park.all():
+            raise serializers.ValidationError(f"{to_location} not in list of {transport_company} parks")
+        return super().validate(attrs)
+
 
       
 '''

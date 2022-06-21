@@ -23,4 +23,4 @@ CACHES = {
 
 '''
 #DEBUG = config('DEBUG', False, cast=bool)
-DEBUG = False
+DEBUG = True

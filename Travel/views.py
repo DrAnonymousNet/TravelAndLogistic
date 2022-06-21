@@ -1,3 +1,4 @@
+from contextvars import Context
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
 from djoser import permissions
@@ -42,22 +43,37 @@ params2=[openapi.Parameter(name="id",
 def index(request):
     return render(request, "index.html")
 
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+
+
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class TransportCompanyCreateApiView(generics.ListCreateAPIView):
  
-    serializer_class = TransportCompanySerializer
+    serializer_class = TransportCompanyWriteSerializer
     queryset = TransportCompany.objects.all()
-    authentication_classes = [JWTAuthentication, BasicAuthentication]
+    authentication_classes = [JWTAuthentication, BasicAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticatedOrReadOnly]
     lookup_field = "company_id"
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
     
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == "GET":
+            serializer = TransportCompanyReadSerializer
+            kwargs.setdefault('context', self.get_serializer_context())
+            return serializer(*args,**kwargs)
+        return super().get_serializer(*args, **kwargs)
+        
+    
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class TransportCompanyApiView(
     generics.RetrieveUpdateDestroyAPIView
     ):
     permission_classes = [permissions.IsAdminUser]
-    authentication_classes = [JWTAuthentication, BasicAuthentication]
-    serializer_class = TransportCompanySerializer
+    authentication_classes = [JWTAuthentication, BasicAuthentication, authentication.SessionAuthentication]
+    serializer_class = TransportCompanyWriteSerializer
     queryset= TransportCompany.objects.all()
 
 
@@ -70,6 +86,13 @@ class TransportCompanyApiView(
     
         return obj
 
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == "GET":
+            serializer = TransportCompanyReadSerializer
+            kwargs.setdefault('context', self.get_serializer_context())
+            return serializer(*args,**kwargs)
+        return super().get_serializer(*args, **kwargs)
+
 
 @method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class LocationCreateListApiView(generics.ListCreateAPIView):
@@ -79,6 +102,8 @@ class LocationCreateListApiView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["state", "address", "city"]
     search_fields = ["search", "address","fields"]
+
+ 
 '''
     def get_queryset(self, **kwargs):
         qs = super().get_queryset()
@@ -193,7 +218,7 @@ class ReviewIndividualApiView(APIView):
 "/transports/ -- all"
 "/transports/id -- crud"
 
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class TransportPriceListCreateApiView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
@@ -229,7 +254,7 @@ class TransportPriceListCreateApiView(generics.ListCreateAPIView):
         return context
 
     
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 @method_decorator(name="get", decorator=swagger_auto_schema( responses={200:TransportPriceReadSerializer(many=True)}))
 @method_decorator(name="put", decorator=swagger_auto_schema(request_body=TransportPriceReadSerializer))
 @method_decorator(name="patch", decorator=swagger_auto_schema(request_body=TransportPriceReadSerializer))
@@ -306,7 +331,7 @@ class TicketApiView(APIView):
     
 @method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class TicketCreateView(generics.CreateAPIView, generics.ListAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer

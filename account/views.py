@@ -6,6 +6,7 @@ from rest_framework import authentication
 from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication, JWTAuthentication
 from .otp_verification_handler import OTPVerifcation
 from .models import User
+from django.contrib.auth import login,logout,authenticate
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -20,20 +21,12 @@ params=[openapi.Parameter(name="OTP",
 
 # Create your views here.
 
-'''
+
 class CsrfExemptSessionAuthentication(authentication.SessionAuthentication):
     def enforce_csrf(self, request):
-        return
-
-class UserRegisterApiView(APIView):
-    serializer_class = UserRegisterSerializer
-    def post(self, request):
-        serializer = UserRegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return  
     
-    
+@method_decorator(name="post", decorator=swagger_auto_schema(auto_schema= None))
 class LoginUserApiView(APIView):
     serializer_class = UserLoginSerializer
     permission_classes = (permissions.AllowAny,)
@@ -43,15 +36,25 @@ class LoginUserApiView(APIView):
         serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        print(user)
-        login(request, serializer.data)
+
+        login(request, user)
         return Response(serializer.data)
 
+@method_decorator(name="post", decorator=swagger_auto_schema(auto_schema= None))
 class LogoutView(APIView):
     def post(self, request):
         logout(request)
         return request.Response()
 
+'''
+class UserRegisterApiView(APIView):
+    serializer_class = UserRegisterSerializer
+    def post(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status = status.HTTP_201_CREATED)
+  
 '''
 
 @method_decorator(name="post", decorator=swagger_auto_schema(request_body=OTPSerializer))
