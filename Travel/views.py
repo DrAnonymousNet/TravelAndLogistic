@@ -98,7 +98,7 @@ class TransportCompanyApiView(
 
 @method_decorator(name="get", decorator=cache_page(timeout=60*5))
 class LocationCreateListApiView(generics.ListCreateAPIView):
-    permission_classes= [permissions.IsAuthenticatedOrReadOnly,permissions.IsAdminUser, IsOwnerOrReadOnly]
+    permission_classes= [permissions.IsAuthenticatedOrReadOnly,permissions.IsAdminUser]
     serializer_class = LocationSerializer
     queryset = Location.objects.all()
     filter_backends = [DjangoFilterBackend]
@@ -118,7 +118,7 @@ class LocationCreateListApiView(generics.ListCreateAPIView):
         return city
 '''
 
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class LocationApiView(
     generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "pk"
@@ -155,7 +155,7 @@ class ReviewApiView(APIView):
         serializer = ReviewSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class ReviewIndividualApiView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
