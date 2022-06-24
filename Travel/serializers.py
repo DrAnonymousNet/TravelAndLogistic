@@ -179,6 +179,8 @@ class TransportCompanyReadSerializer(serializers.ModelSerializer):
     park = serializers.SerializerMethodField()
     review = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    
     class Meta:
         model = TransportCompany
         fields = ["url",
@@ -187,6 +189,7 @@ class TransportCompanyReadSerializer(serializers.ModelSerializer):
                 "lugage_policy",
                 "review",
                 "price",
+                "average_rating"
         ]
                         
         extra_kwargs = {
@@ -194,6 +197,10 @@ class TransportCompanyReadSerializer(serializers.ModelSerializer):
             "url":{"read_only":True},
             "price":{"read_only":True}
         }
+
+    def get_average_rating(self, obj):
+        return obj.average_rating["avg_rating"]
+
 
     def get_park(self, obj):
         qs = obj.park.all()

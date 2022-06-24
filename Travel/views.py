@@ -1,5 +1,5 @@
 
-import json
+from rest_framework import filters
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
 from djoser import permissions
@@ -7,7 +7,7 @@ from .serializers import *
 from rest_framework.views import APIView 
 from rest_framework import generics
 from rest_framework import authentication, permissions
-from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication, JWTAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import status
 from .models import Ticket
 from rest_framework.authentication import BasicAuthentication
@@ -21,8 +21,8 @@ from rest_framework.decorators import permission_classes
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
-from django.urls.resolvers import RoutePattern
 from django.views.decorators.cache import cache_control, cache_page
+from .decorators import FilterSearchPaginate
 # Create your views here.
 
 params=[openapi.Parameter(name="company_id",
@@ -46,15 +46,17 @@ def index(request):
     return render(request, "index.html")
 
 
-
-@method_decorator(name="get", decorator=cache_page(timeout=5))
+@FilterSearchPaginate(
+             filterset_fields = ["name","park","park__city", "park__state","park__address"]
+            ,search_fields=["name","park__city", "park__state","park__address"])
 class TransportCompanyCreateApiView(generics.ListCreateAPIView):
- 
     serializer_class = TransportCompanyWriteSerializer
     queryset = TransportCompany.objects.all()
     authentication_classes = [JWTAuthentication, BasicAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticatedOrReadOnly]
     lookup_field = "company_id"
+    
+
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

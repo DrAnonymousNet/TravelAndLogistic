@@ -1,3 +1,8 @@
+
+from django.contrib import messages
+from django.http import HttpRequest, HttpResponseNotFound
+from django.shortcuts import redirect, render
+from requests import request
 from rest_framework.views import APIView
 from .serializers import OTPSerializer, UserLoginSerializer, UserRegisterSerializer
 from rest_framework.response import Response
@@ -10,6 +15,7 @@ from django.contrib.auth import login,logout,authenticate
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.views import View
 # Create your views here.
 
 params=[openapi.Parameter(name="OTP",
@@ -83,4 +89,3 @@ class OTPAPIView(APIView):
         number = kwargs.get("phone_number")
         otp_response = OTPVerifcation(phone_number=number, send=True)
         return Response(otp_response.response.json())
-        

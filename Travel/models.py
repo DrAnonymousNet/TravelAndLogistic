@@ -1,14 +1,15 @@
-
-from enum import unique
 from django.db import models
 from django.forms import ValidationError
 #from django.contrib.gis.db.models import PointField
 from .choice import *
-from django.db.models import Q 
+from django.db.models import Q, Avg, Func
 from django.contrib.auth import get_user_model
 # Create your models here.
 
 User = get_user_model()
+
+class Round(Func):
+    function = "ROUND"
 
 
 
@@ -99,10 +100,15 @@ class TransportCompany(models.Model):
     name = models.CharField(max_length=100)
     park = models.ManyToManyField(Location)
     lugage_policy = models.TextField()
+    
 
     def __str__(self) -> str:
         return f"{self.name}"
 
+    @property
+    def average_rating(self):
+        average_rating =self.review_set.aggregate(avg_rating = Round(Avg("ratings")))
+        return average_rating
    
 '''
 class CarType(models.Model):

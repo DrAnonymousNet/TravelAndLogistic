@@ -76,10 +76,12 @@ class UserLoginSerializer(serializers.ModelSerializer):
         email = data["email"]
         password= data["password"]
         if email and password:
-            user = authenticate(username=email, password=password)
+            data["email"] = email.lower()
+            user = authenticate(username=email.lower(), password=password)
             if not user:
                 raise serializers.ValidationError("Either username or email is not correct")
             data["user"] = user
+            
             return data
         else:
             raise serializers.ValidationError("Input both email and password")
