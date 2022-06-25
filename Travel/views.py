@@ -97,15 +97,16 @@ class TransportCompanyApiView(
             return serializer(*args,**kwargs)
         return super().get_serializer(*args, **kwargs)
 
-
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+@FilterSearchPaginate(
+    filterset_fields = ["state", "address", "city"],
+    search_fields = ["search", "address","fields"]
+)
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class LocationCreateListApiView(generics.ListCreateAPIView):
     permission_classes= [permissions.IsAuthenticatedOrReadOnly,permissions.IsAdminUser]
     serializer_class = LocationSerializer
     queryset = Location.objects.all()
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["state", "address", "city"]
-    search_fields = ["search", "address","fields"]
+    
 
  
 '''
@@ -129,8 +130,11 @@ class LocationApiView(
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+@FilterSearchPaginate(
+    filterset_fields=["author", "rating"],
+    search_fields=["author", "rating"]
+)
+@method_decorator(name="get", decorator=cache_page(timeout=5))
 class ReviewApiView(APIView):
     authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -222,6 +226,10 @@ class ReviewIndividualApiView(APIView):
 "/transports/ -- all"
 "/transports/id -- crud"
 
+@FilterSearchPaginate(
+    filterset_fields=["from_location__address","from_location__city","from_location__state","to_location__address","to_location__city","to_location__state", "car_type","price"],
+    search_fields=["car_type", "price"]
+)
 @method_decorator(name="get", decorator=cache_page(timeout=5))
 class TransportPriceListCreateApiView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -290,7 +298,8 @@ class TransportPriceApiView(generics.RetrieveUpdateDestroyAPIView):
         context["company"] = company
         return context
 
-@method_decorator(name="get", decorator=cache_page(timeout=60*5))
+
+@method_decorator(name="get", decorator=cache_page(timeout=1))
 class TicketApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TicketSerializer
@@ -332,16 +341,24 @@ class TicketApiView(APIView):
         qs.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    
+@FilterSearchPaginate(
+    filterset_fields=["date", "time","car_type","paid","price",
+    "reserved_seats","transport_company__name",
+    "to_location__state","from_location__state","from_location__city", "to_location__city",
+    "from_location__address","to_location__address"],
+    search_fields=["date", "time","car_type","paid","price",
+    "reserved_seats","transport_company__name",
+    "to_location__state","from_location__state","from_location__city", "to_location__city",
+    "from_location__address","to_location__address"]
+) 
 @method_decorator(name="get", decorator=cache_page(timeout=60*5))
-class TicketCreateView(generics.CreateAPIView, generics.ListAPIView):
+class TicketCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication, authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
     
     def get_serializer_class(self):
-        
         if self.request.method == "GET":
             return TicketListSerializer
         return super().get_serializer_class()

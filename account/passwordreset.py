@@ -8,12 +8,23 @@ from django.shortcuts import redirect, render
 from urllib.parse import urlencode
 from django.contrib.auth import get_user_model
 from django.views import View
+from django.core.mail import send_mail, EmailMessage
 
 User = get_user_model()
 
 
 def SendResetEmail(message:str, recipient:str):
     subject = "Reset Email Link"
+
+    try:
+        send_mail(subject=subject,
+                message=message,
+                recipient_list=[recipient],
+                    fail_silently=False
+                                )
+    except:
+        pass
+    
 
 def generate_token(email:str) -> str:
     signer = TimestampSigner()
@@ -130,9 +141,17 @@ class PasswordResetEmailView(View):
                 template_name = "account/resetemail.html"
 
                 context = {
-                    "link":construct_link(request, uuid, email)
+                    "link":construct_link(request, email, token)
                 }
                 message = loader.render_to_string(template_name, context, request)
+                SendResetEmail(message, email)
+                
+                messages.add_message(request, messages.SUCCESS, "An verification link has been sent to your email")
+        template="account/password_reset_email.html"
+        context={
+            "form":email_form
+         }
+        return render(request, template_name=template, context=context)
 
 # ERRORS
 

@@ -3,7 +3,6 @@ import datetime
 import json
 import math
 import random
-import re
 from urllib import response
 from django.urls import reverse
 from rest_framework.request import HttpRequest
@@ -13,7 +12,7 @@ from django.core.cache import cache
 from decouple import config
 from .models import Ticket, TransactionTx
 from .serializers import TransactionSerializer
-
+from django.urls import resolve
 
 import environ
 
@@ -57,7 +56,7 @@ class TicketPayment:
         data = { "tx_ref": self.generate_tx() ,
                 "amount": str(self.ticket.price),
                 "currency""": "NGN",
-                "redirect_url": reverse("ticket-payment-verify",kwargs = {"pk":self.ticket.id}), #f"http://127.0.0.1:8000/tickets/{self.ticket.id}/payment-verify",
+                "redirect_url": self.request.build_absolute_uri(reverse("ticket-payment-verify",kwargs = {"pk":self.ticket.id})), #f"http://127.0.0.1:8000/tickets/{self.ticket.id}/payment-verify",
                 "meta": {
                     "consumer_id": f"{user.id}",
 

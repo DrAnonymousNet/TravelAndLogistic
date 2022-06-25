@@ -1,3 +1,4 @@
+from cgitb import lookup
 from multiprocessing import context
 from django.db import transaction
 from django.urls import reverse
@@ -257,13 +258,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 
-
-
-
-
-
-
-
 class TicketListSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="ticket")
     #car_type = serializers.SerializerMethodField()
@@ -271,7 +265,7 @@ class TicketListSerializer(serializers.ModelSerializer):
     from_location = LocationSerializer()
     to_location = LocationSerializer()
     paid = serializers.BooleanField(read_only=True)
-    
+    payment_link = serializers.HyperlinkedIdentityField(view_name="ticket-payment", lookup_field="pk")
     
     class Meta:
         model = Ticket
@@ -288,6 +282,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             "car_type",
             "price",
             "paid",
+            "payment_link"
         ]
 
     def validate(self, attrs):
