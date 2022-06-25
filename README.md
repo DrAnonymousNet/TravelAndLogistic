@@ -55,4 +55,11 @@ To use the account detail above, skip step 1 to 3, ELSE:
 6. Authorize yourself, Authorization token in the format `JWT {Jwt access token}`
 7. You can use other endpoints now.
 
+# Test Card Detail For Payment
+
+```
+card num: 4187 4274 15564246
+valid thru: 09/32
+cvv: 828
+```
 
