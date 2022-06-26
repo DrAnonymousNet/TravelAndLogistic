@@ -17,4 +17,4 @@ python-decouple
 django-cors-headers
 django-heroku
 celery
-dateutil
+python-dateutil
