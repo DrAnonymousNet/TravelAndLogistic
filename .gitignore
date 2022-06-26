@@ -8,3 +8,4 @@ media
 celerybeat.pid
 data/db/
 celerybeat-schedule.db
+celerybeat-schedule
