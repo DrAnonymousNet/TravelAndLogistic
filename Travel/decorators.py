@@ -34,6 +34,5 @@ def FilterSearchPaginate(filterset_fields=None, search_fields=None):
                 return self.cls
             return wrapper
         def as_view(self, *args,**kwargs):
-            print(hasattr(self.cls, "filterset_fields"), "\n\n\n\n")
             return self.cls.as_view(*args,**kwargs)
     return decorator

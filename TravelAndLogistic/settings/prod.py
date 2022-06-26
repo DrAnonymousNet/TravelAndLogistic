@@ -16,21 +16,18 @@ DATABASES = {
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/django_cache',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': config("REDIS_URL"),
+        'TIMEOUT': 30,
+        'KEY_PREFIX': "dev"
     }
 }
 
-'''
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379',
-        'TIMEOUT': 30,
-        'KEY_PREFIX': "prod"
-    }
-}
-'''
+BROKER_URL = config("REDIS_URL")
+CELERY_RESULT_BACKEND = config("REDIS_URL")
+
+
+
 DEBUG = config('DEBUG', False, cast=bool)
 ALLOWED_HOSTS += ["gowithease.herokuapp.com","*"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage" 

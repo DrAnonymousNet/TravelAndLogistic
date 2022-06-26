@@ -1,4 +1,5 @@
 
+from urllib import response
 from rest_framework import filters
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, render
@@ -23,6 +24,7 @@ from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
 from django.views.decorators.cache import cache_control, cache_page
 from .decorators import FilterSearchPaginate
+from .signals import *
 # Create your views here.
 
 params=[openapi.Parameter(name="company_id",
@@ -330,6 +332,7 @@ class TicketApiView(APIView):
         serializer = TicketSerializer(instance=qs, data=self.request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
     
     def delete(self, request, *args, **kwargs):
@@ -340,6 +343,17 @@ class TicketApiView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         qs.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def dispatch(self, request, *args, **kwargs):
+        
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method == "PUT" and response.status_code == 202:
+            url = request.build_absolute_uri(reverse("ticket", kwargs = {"pk":response.data.get("id")}))
+            payment_url = request.build_absolute_uri(reverse("ticket-payment", kwargs = {"pk":response.data.get("id")}))
+            response.data["Payment Link"] = payment_url
+            response.headers["Location"] = url
+
+        return response
 
 @FilterSearchPaginate(
     filterset_fields=["date", "time","car_type","paid","price",
@@ -377,7 +391,8 @@ class TicketCreateView(generics.ListCreateAPIView):
     def dispatch(self, request, *args, **kwargs):
         print(args, kwargs)
         response = super().dispatch(request, *args, **kwargs)
-        if request.method == "POST":
+        if request.method == "POST" and response.status_code == 201:
+            
             url = request.build_absolute_uri(reverse("ticket", kwargs = {"pk":response.data.get("id")}))
             payment_url = request.build_absolute_uri(reverse("ticket-payment", kwargs = {"pk":response.data.get("id")}))
             response.data["Payment Link"] = payment_url
@@ -402,7 +417,7 @@ def pay_for_ticket(request, pk=None, *args, **kwargs):
     pay = TicketPayment(ticket=ticket, request=request)
     #return redirect(pay.link)
     #data = json.dumps(pay.response.data)
-    print()
+    
     return Response(status=status.HTTP_200_OK, data=pay.response)
     #return Response( status=status.HTTP_200_OK)
 
@@ -412,10 +427,13 @@ def pay_for_ticket(request, pk=None, *args, **kwargs):
 def payment_verify(request, pk, *args, **kwargs):
     with transaction.atomic():
         ticket = Ticket.objects.get(id =pk)
+        
         if verify_transaction(request, ticket):
             
             ticket.paid = True
             ticket.save()
-            serializer = TicketSerializer(instance=ticket)
+            serializer = TicketListSerializer(instance=ticket ,context = {"request":request})
+            payment_verify_signal.send(sender = payment_verify, data=serializer.data)
+            notification_signal.send(sender = payment_verify,data=serializer.data )
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
     return Response(status=status.HTTP_406_NOT_ACCEPTABLE)

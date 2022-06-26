@@ -5,5 +5,6 @@ __pycache__
 .env
 db.sqlite3
 media
-
+celerybeat.pid
 data/db/
+celerybeat-schedule.db

@@ -1,0 +1,35 @@
+{% extends "email_index.html" %}
+
+{%block content%}
+
+<div class="container" 
+    style="
+    height: auto;
+    margin-bottom: 0px; 
+    margin-top: 100px;
+    padding: 100px; 
+    border: 0px solid red;
+    background-color: rgb(255, 255, 255);
+    border-radius: 20px;
+    box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+    
+    ">
+
+    <div class="container mt-5">
+       
+        <h2 style="margin-bottom: 5px;">Ticket Detail {{notification}}</h2>
+        <hr>
+        <h2>GoWithEase Travel Ticket For {{user}}</h2>
+       <p> Ticket {{id}}</p>
+       <br>
+       <p>from: {{from_location.state}} To {{to_location.state}}</p>
+       <p>Car Type: {{car_type}}</p>
+       <p>Transport Company: {{transport_company}}</p>
+       <p>Reserved Seat: {{reserved_seats}}</p>
+        <div class="border-top pt-3 mt-3">
+            <small>Proceed to the {{from_location.address}} car park 20 minutes before {{time|time:"H:i a" }} on {{date|date:"D d M Y"}}</small>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

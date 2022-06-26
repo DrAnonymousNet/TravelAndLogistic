@@ -12,3 +12,4 @@ elif config('ENVIRONMENT') == 'GITHUB_WORKFLOW':
 
 else:
     from .dev import *
+
