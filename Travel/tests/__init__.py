@@ -1,1 +1,1 @@
-from . import location
+from . import test_location
